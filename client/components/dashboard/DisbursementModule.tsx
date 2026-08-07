@@ -49,28 +49,29 @@ export default function DisbursementModule() {
   }
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-semibold">Disbursement</h1>
-      <p className="text-sm text-gray-500">Sanctioned loans ready to be disbursed.</p>
+    <div className="mx-auto max-w-5xl">
+      <p className="text-sm font-semibold text-sky-700">Funds release</p>
+      <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">Disbursement</h1>
+      <p className="mt-2 text-sm text-slate-500">Sanctioned loans ready to be disbursed.</p>
 
-      {loading && <p className="text-sm text-gray-500">Loading...</p>}
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      {actionError && <p className="text-sm text-red-600">{actionError}</p>}
+      {loading && <p className="mt-6 text-sm text-slate-500">Loading sanctioned loans...</p>}
+      {error && <p className="alert-error mt-6">{error}</p>}
+      {actionError && <p className="alert-error mt-4">{actionError}</p>}
       {!loading && !error && applications.length === 0 && (
-        <p className="text-sm text-gray-500">No loans pending disbursement.</p>
+        <p className="surface-card mt-6 p-5 text-sm text-slate-500">No loans pending disbursement.</p>
       )}
 
-      <div className="space-y-3">
+      <div className="mt-6 space-y-3">
         {applications.map((app) => (
           <div
             key={app._id}
-            className="flex items-center justify-between rounded border border-gray-200 p-4 text-sm"
+            className="surface-card flex flex-col gap-4 p-4 text-sm sm:flex-row sm:items-center sm:justify-between sm:p-5"
           >
             <div>
               <p className="font-medium">
                 {app.fullName} — {app.loanRefNumber}
               </p>
-              <p className="text-gray-500">
+              <p className="mt-1 text-slate-500">
                 ₹{app.loanAmount?.toLocaleString("en-IN")} · Total repayment ₹
                 {app.totalRepayment?.toLocaleString("en-IN")}
               </p>
@@ -79,7 +80,7 @@ export default function DisbursementModule() {
               type="button"
               disabled={busyId === app._id}
               onClick={() => handleDisburse(app._id)}
-              className="rounded bg-blue-600 px-3 py-1.5 text-white disabled:opacity-50"
+              className="btn-primary self-start sm:self-auto"
             >
               Mark disbursed
             </button>

@@ -6,6 +6,7 @@ import { apiFetch, ApiError } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import { saveApplicationId } from "@/lib/application";
 import { Application } from "@/types/application";
+import BrandMark from "@/components/BrandMark";
 
 function nextStepFor(application: Application): string {
   if (application.breStatus !== "passed") return "/apply/personal-details";
@@ -43,12 +44,19 @@ export default function ApplyEntryPage() {
   }, [router]);
 
   return (
-    <main className="flex flex-1 items-center justify-center p-8">
+    <main className="page-shell flex flex-1 items-center justify-center p-5 sm:p-8">
+      <div className="surface-card w-full max-w-md p-6 text-center sm:p-8">
+        <BrandMark />
       {error ? (
-        <p className="text-sm text-red-600">{error}</p>
+        <p className="alert-error mt-6 text-left">{error}</p>
       ) : (
-        <p className="text-sm text-gray-500">Loading your application...</p>
+        <>
+          <span className="mx-auto mt-8 block size-8 animate-spin rounded-full border-4 border-sky-100 border-t-sky-600" />
+          <p className="mt-4 text-sm font-medium text-slate-600">Loading your application...</p>
+          <p className="mt-1 text-xs text-slate-500">Checking where you left off.</p>
+        </>
       )}
+      </div>
     </main>
   );
 }

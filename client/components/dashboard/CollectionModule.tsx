@@ -88,25 +88,26 @@ export default function CollectionModule() {
   }
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-semibold">Collection</h1>
-      <p className="text-sm text-gray-500">Disbursed loans with an outstanding balance.</p>
+    <div className="mx-auto max-w-5xl">
+      <p className="text-sm font-semibold text-sky-700">Repayment tracking</p>
+      <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">Collection</h1>
+      <p className="mt-2 text-sm text-slate-500">Disbursed loans with an outstanding balance.</p>
 
-      {loading && <p className="text-sm text-gray-500">Loading...</p>}
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {loading && <p className="mt-6 text-sm text-slate-500">Loading active loans...</p>}
+      {error && <p className="alert-error mt-6">{error}</p>}
       {!loading && !error && applications.length === 0 && (
-        <p className="text-sm text-gray-500">No loans currently being collected.</p>
+        <p className="surface-card mt-6 p-5 text-sm text-slate-500">No loans currently being collected.</p>
       )}
 
-      <div className="space-y-3">
+      <div className="mt-6 space-y-3">
         {applications.map((app) => (
-          <div key={app._id} className="rounded border border-gray-200 p-4 text-sm">
-            <div className="flex items-center justify-between">
+          <div key={app._id} className="surface-card p-4 text-sm sm:p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="font-medium">
                   {app.fullName} — {app.loanRefNumber}
                 </p>
-                <p className="text-gray-500">
+                <p className="mt-1 text-slate-500">
                   Outstanding ₹{app.outstandingBalance?.toLocaleString("en-IN")} of ₹
                   {app.totalRepayment?.toLocaleString("en-IN")}
                 </p>
@@ -114,19 +115,19 @@ export default function CollectionModule() {
               <button
                 type="button"
                 onClick={() => openForm(app._id)}
-                className="rounded bg-blue-600 px-3 py-1.5 text-white"
+                className="btn-primary self-start sm:self-auto"
               >
                 Record payment
               </button>
             </div>
 
             {openId === app._id && (
-              <form onSubmit={(e) => handleSubmit(e, app._id)} className="mt-3 grid grid-cols-3 gap-2">
+              <form onSubmit={(e) => handleSubmit(e, app._id)} className="mt-4 grid gap-2 sm:grid-cols-3">
                 <input
                   value={form.utrNumber}
                   onChange={(e) => setForm((f) => ({ ...f, utrNumber: e.target.value }))}
                   placeholder="UTR number"
-                  className="rounded border border-gray-300 px-2 py-1.5 text-sm"
+                  className="field-control"
                 />
                 <input
                   type="number"
@@ -134,31 +135,31 @@ export default function CollectionModule() {
                   value={form.amount}
                   onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
                   placeholder="Amount"
-                  className="rounded border border-gray-300 px-2 py-1.5 text-sm"
+                  className="field-control"
                 />
                 <input
                   type="date"
                   value={form.date}
                   onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
-                  className="rounded border border-gray-300 px-2 py-1.5 text-sm"
+                  className="field-control"
                 />
-                <div className="col-span-3 flex items-center gap-2">
+                <div className="flex items-center gap-2 sm:col-span-3">
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="rounded bg-green-600 px-3 py-1.5 text-white disabled:opacity-50"
+                    className="rounded-lg bg-emerald-600 px-3 py-2 font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
                   >
                     {submitting ? "Recording..." : "Confirm payment"}
                   </button>
                   <button
                     type="button"
                     onClick={() => setOpenId(null)}
-                    className="rounded border border-gray-300 px-3 py-1.5"
+                    className="rounded-lg border border-slate-300 px-3 py-2 font-semibold text-slate-600 hover:bg-slate-50"
                   >
                     Cancel
                   </button>
                 </div>
-                {formError && <p className="col-span-3 text-sm text-red-600">{formError}</p>}
+                {formError && <p className="alert-error sm:col-span-3">{formError}</p>}
               </form>
             )}
           </div>

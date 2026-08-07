@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "CreditSea LMS",
-  description: "Loan Management System : Borrower Portal & Operations Dashboard",
+  title: "CreditSea | Loan Management System",
+  description: "Digital, transparent loan applications and operations management.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

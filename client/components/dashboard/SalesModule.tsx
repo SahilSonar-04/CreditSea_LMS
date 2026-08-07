@@ -29,20 +29,22 @@ export default function SalesModule() {
   }, []);
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-semibold">Sales</h1>
-      <p className="text-sm text-gray-500">Registered borrowers who haven&apos;t applied yet.</p>
+    <div className="mx-auto max-w-5xl">
+      <p className="text-sm font-semibold text-sky-700">Pre-application</p>
+      <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">Sales leads</h1>
+      <p className="mt-2 text-sm text-slate-500">Registered borrowers who haven&apos;t applied yet.</p>
 
-      {loading && <p className="text-sm text-gray-500">Loading...</p>}
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {loading && <p className="mt-6 text-sm text-slate-500">Loading leads...</p>}
+      {error && <p className="alert-error mt-6">{error}</p>}
       {!loading && !error && leads.length === 0 && (
-        <p className="text-sm text-gray-500">No pending leads.</p>
+        <p className="surface-card mt-6 p-5 text-sm text-slate-500">No pending leads.</p>
       )}
 
       {leads.length > 0 && (
-        <table className="w-full text-left text-sm">
+        <div className="surface-card mt-6 overflow-x-auto">
+        <table className="min-w-[620px] w-full text-left text-sm">
           <thead>
-            <tr className="border-b border-gray-200 text-gray-500">
+            <tr className="border-b border-slate-200 bg-slate-50 text-slate-500">
               <th className="py-2 pr-4">Name</th>
               <th className="py-2 pr-4">Email</th>
               <th className="py-2 pr-4">Phone</th>
@@ -51,7 +53,7 @@ export default function SalesModule() {
           </thead>
           <tbody>
             {leads.map((lead) => (
-              <tr key={lead._id} className="border-b border-gray-100">
+              <tr key={lead._id} className="border-b border-slate-100 last:border-0">
                 <td className="py-2 pr-4">{lead.name}</td>
                 <td className="py-2 pr-4">{lead.email}</td>
                 <td className="py-2 pr-4">{lead.phone || "—"}</td>
@@ -60,6 +62,7 @@ export default function SalesModule() {
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </div>
   );

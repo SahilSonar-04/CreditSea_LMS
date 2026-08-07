@@ -6,6 +6,7 @@ import Link from "next/link";
 import { apiFetch } from "@/lib/api";
 import { saveSession } from "@/lib/auth";
 import { AuthResponse } from "@/types/auth";
+import BrandMark from "@/components/BrandMark";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -35,47 +36,52 @@ export default function SignInPage() {
   }
 
   return (
-    <main className="flex flex-1 items-center justify-center p-8">
-      <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
-        <h1 className="text-xl font-semibold">Sign in</h1>
+    <main className="page-shell flex flex-1 items-center justify-center p-5 sm:p-8">
+      <form onSubmit={handleSubmit} className="surface-card w-full max-w-md space-y-5 p-6 sm:p-8">
+        <BrandMark />
+        <div>
+          <p className="text-sm font-semibold text-sky-700">Welcome back</p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">Sign in to your account</h1>
+          <p className="mt-2 text-sm leading-6 text-slate-500">Continue your application or access your operations workspace.</p>
+        </div>
 
-        <div className="space-y-1">
-          <label htmlFor="email" className="text-sm font-medium">Email</label>
+        <div>
+          <label htmlFor="email" className="field-label">Email</label>
           <input
             id="email"
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+            className="field-control"
           />
         </div>
 
-        <div className="space-y-1">
-          <label htmlFor="password" className="text-sm font-medium">Password</label>
+        <div>
+          <label htmlFor="password" className="field-label">Password</label>
           <input
             id="password"
             type="password"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+            className="field-control"
           />
         </div>
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="alert-error">{error}</p>}
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
+          className="btn-primary w-full"
         >
           {loading ? "Signing in..." : "Sign in"}
         </button>
 
-        <p className="text-sm text-gray-500">
+        <p className="text-center text-sm text-slate-500">
           No account?{" "}
-          <Link href="/onboarding/sign-up" className="text-blue-600 underline">
+          <Link href="/onboarding/sign-up" className="font-semibold text-sky-700 hover:text-sky-900">
             Sign up
           </Link>
         </p>

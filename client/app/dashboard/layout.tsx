@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getToken, useSessionUser, clearSession } from "@/lib/auth";
 import { UserRole } from "@/types/auth";
+import BrandMark from "@/components/BrandMark";
 
 const MODULES: { role: Exclude<UserRole, "admin" | "borrower">; label: string }[] = [
   { role: "sales", label: "Sales" },
@@ -51,15 +52,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const visibleModules = MODULES.filter((m) => user.role === "admin" || user.role === m.role);
 
   return (
-    <div className="flex flex-1">
-      <aside className="w-48 shrink-0 border-r border-gray-200 p-4">
-        <p className="mb-4 text-xs font-medium uppercase text-gray-400">{user.role} dashboard</p>
-        <nav className="space-y-1">
+    <div className="min-h-0 flex flex-1 flex-col bg-slate-50 lg:flex-row">
+      <aside className="brand-gradient shrink-0 p-5 text-white lg:w-64 lg:p-6">
+        <div className="flex items-center justify-between lg:block">
+          <BrandMark light />
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-cyan-100 lg:mt-8">{user.role} workspace</p>
+        </div>
+        <nav className="mt-5 flex gap-2 overflow-x-auto lg:mt-4 lg:block lg:space-y-1">
           {visibleModules.map((m) => (
             <Link
               key={m.role}
               href={`/dashboard/${m.role}`}
-              className="block rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              className="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-cyan-50 transition hover:bg-white/15 hover:text-white lg:block"
             >
               {m.label}
             </Link>
@@ -68,12 +72,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <button
           type="button"
           onClick={handleSignOut}
-          className="mt-6 w-full rounded border border-gray-300 px-3 py-2 text-left text-sm text-gray-500 hover:bg-gray-100"
+          className="mt-5 rounded-lg border border-white/20 px-3 py-2 text-sm font-semibold text-cyan-50 transition hover:bg-white/15 lg:mt-8 lg:w-full lg:text-left"
         >
           Sign out
         </button>
       </aside>
-      <div className="flex-1 p-6">{children}</div>
+      <div className="flex-1 overflow-auto p-5 sm:p-8">{children}</div>
     </div>
   );
 }

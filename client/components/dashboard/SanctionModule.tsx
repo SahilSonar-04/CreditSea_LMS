@@ -77,26 +77,27 @@ export default function SanctionModule() {
   }
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-semibold">Sanction</h1>
-      <p className="text-sm text-gray-500">Applications awaiting a sanction decision.</p>
+    <div className="mx-auto max-w-5xl">
+      <p className="text-sm font-semibold text-sky-700">Decision queue</p>
+      <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">Sanction</h1>
+      <p className="mt-2 text-sm text-slate-500">Applications awaiting a sanction decision.</p>
 
-      {loading && <p className="text-sm text-gray-500">Loading...</p>}
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      {actionError && <p className="text-sm text-red-600">{actionError}</p>}
+      {loading && <p className="mt-6 text-sm text-slate-500">Loading applications...</p>}
+      {error && <p className="alert-error mt-6">{error}</p>}
+      {actionError && <p className="alert-error mt-4">{actionError}</p>}
       {!loading && !error && applications.length === 0 && (
-        <p className="text-sm text-gray-500">No applications pending sanction.</p>
+        <p className="surface-card mt-6 p-5 text-sm text-slate-500">No applications pending sanction.</p>
       )}
 
-      <div className="space-y-3">
+      <div className="mt-6 space-y-3">
         {applications.map((app) => (
-          <div key={app._id} className="rounded border border-gray-200 p-4 text-sm">
-            <div className="flex items-center justify-between">
+          <div key={app._id} className="surface-card p-4 text-sm sm:p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="font-medium">
                   {app.fullName} — {app.loanRefNumber}
                 </p>
-                <p className="text-gray-500">
+                <p className="mt-1 text-slate-500">
                   ₹{app.loanAmount?.toLocaleString("en-IN")} for {app.tenureDays} days · Salary ₹
                   {app.monthlySalary?.toLocaleString("en-IN")}
                 </p>
@@ -106,7 +107,7 @@ export default function SanctionModule() {
                   type="button"
                   disabled={busyId === app._id}
                   onClick={() => handleApprove(app._id)}
-                  className="rounded bg-green-600 px-3 py-1.5 text-white disabled:opacity-50"
+                  className="rounded-lg bg-emerald-600 px-3 py-2 font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
                 >
                   Approve
                 </button>
@@ -117,7 +118,7 @@ export default function SanctionModule() {
                     setRejectingId(app._id);
                     setActionError(null);
                   }}
-                  className="rounded bg-red-600 px-3 py-1.5 text-white disabled:opacity-50"
+                  className="rounded-lg bg-rose-600 px-3 py-2 font-semibold text-white transition hover:bg-rose-700 disabled:opacity-50"
                 >
                   Reject
                 </button>
@@ -125,18 +126,18 @@ export default function SanctionModule() {
             </div>
 
             {rejectingId === app._id && (
-              <div className="mt-3 flex gap-2">
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                 <input
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
                   placeholder="Reason for rejection"
-                  className="flex-1 rounded border border-gray-300 px-2 py-1.5 text-sm"
+                  className="field-control flex-1"
                 />
                 <button
                   type="button"
                   disabled={busyId === app._id}
                   onClick={() => handleReject(app._id)}
-                  className="rounded border border-red-600 px-3 py-1.5 text-red-600 disabled:opacity-50"
+                  className="rounded-lg border border-rose-600 px-3 py-2 font-semibold text-rose-700 disabled:opacity-50"
                 >
                   Confirm reject
                 </button>
