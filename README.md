@@ -91,16 +91,16 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Seed Credentials
 
-All seeded accounts use password: `Password123!`
+All seeded accounts use password: `Password@123`
 
 | Role | Email | Portal access |
 | --- | --- | --- |
-| Admin | `admin@creditsea-lms.test` | All four operations modules |
-| Sales | `sales@creditsea-lms.test` | Sales only |
-| Sanction | `sanction@creditsea-lms.test` | Sanction only |
-| Disbursement | `disbursement@creditsea-lms.test` | Disbursement only |
-| Collection | `collection@creditsea-lms.test` | Collection only |
-| Borrower | `borrower@creditsea-lms.test` | Application portal only |
+| Admin | `admin@creditsea.test` | All four operations modules |
+| Sales | `sales@creditsea.test` | Sales only |
+| Sanction | `sanction@creditsea.test` | Sanction only |
+| Disbursement | `disbursement@creditsea.test` | Disbursement only |
+| Collection | `collection@creditsea.test` | Collection only |
+| Borrower | `borrower@creditsea.test` | Application portal only |
 
 Public sign-up always creates a `borrower`; executive roles are supplied by the seed workflow.
 
