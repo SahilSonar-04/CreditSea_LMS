@@ -4,11 +4,14 @@ import { roleMiddleware } from "../middleware/role.middleware";
 import {
   getSalesLeads,
   getSanctionQueue,
+  getSanctionHistory,
   approveApplication,
   rejectApplication,
   getDisbursementQueue,
+  getDisbursementHistory,
   disburseApplication,
   getCollectionQueue,
+  getCollectionHistory,
   recordPayment,
 } from "../controllers/dashboard.controller";
 
@@ -35,5 +38,9 @@ router.post(
   roleMiddleware("collection", "admin"),
   recordPayment
 );
+
+router.get("/sanction/history", authMiddleware, roleMiddleware("sanction", "admin"), getSanctionHistory);
+router.get("/disbursement/history", authMiddleware, roleMiddleware("disbursement", "admin"), getDisbursementHistory);
+router.get("/collection/history", authMiddleware, roleMiddleware("collection", "admin"), getCollectionHistory);
 
 export default router;

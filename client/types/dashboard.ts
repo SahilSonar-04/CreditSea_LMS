@@ -15,3 +15,12 @@ export interface Payment {
   recordedBy?: string;
   createdAt: string;
 }
+
+export interface PaymentHistoryEntry {
+  _id: string;
+  utrNumber: string;
+  amount: number;
+  date: string;
+  createdAt: string;
+  loanId: { _id: string; loanRefNumber: string; fullName?: string } | string;
+}

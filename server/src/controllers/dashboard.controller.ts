@@ -292,3 +292,36 @@ export async function recordPayment(req: Request, res: Response): Promise<void> 
     res.status(500).json({ message: "Failed to record payment", error: (error as Error).message });
   }
 }
+
+export async function getSanctionHistory(_req: Request, res: Response): Promise<void> {
+  try {
+    const applications = await Application.find({
+      status: { $in: ["SANCTIONED", "REJECTED", "DISBURSED", "CLOSED"] },
+    }).sort({ createdAt: -1 });
+    res.status(200).json({ applications });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch sanction history", error: (error as Error).message });
+  }
+}
+
+export async function getDisbursementHistory(_req: Request, res: Response): Promise<void> {
+  try {
+    const applications = await Application.find({
+      status: { $in: ["DISBURSED", "CLOSED"] },
+    }).sort({ createdAt: -1 });
+    res.status(200).json({ applications });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch disbursement history", error: (error as Error).message });
+  }
+}
+
+export async function getCollectionHistory(_req: Request, res: Response): Promise<void> {
+  try {
+    const payments = await Payment.find()
+      .sort({ date: -1 })
+      .populate("loanId", "loanRefNumber fullName");
+    res.status(200).json({ payments });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch collection history", error: (error as Error).message });
+  }
+}
