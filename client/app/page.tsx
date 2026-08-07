@@ -1,7 +1,21 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { getToken, useSessionUser } from "@/lib/auth";
 import BrandMark from "@/components/BrandMark";
 
 export default function Home() {
+  const router = useRouter();
+  const user = useSessionUser();
+
+  useEffect(() => {
+    if (user === undefined) return;
+    if (!user || !getToken()) return;
+
+    router.replace(user.role === "borrower" ? "/borrower" : `/dashboard/${user.role}`);
+  }, [router, user]);
   return (
     <main className="page-shell flex flex-1 flex-col">
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-5 lg:px-8">
