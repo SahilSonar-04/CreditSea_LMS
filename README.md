@@ -40,4 +40,23 @@ npm run seed
 This creates one account per role.
 
 ## Seed Credentials
-_To be filled in once the seed script exists._
+Password for every seeded account: `Password123!`
+
+| Role | Email |
+|---|---|
+| Admin | admin@creditsea-lms.test |
+| Sales | sales@creditsea-lms.test |
+| Sanction | sanction@creditsea-lms.test |
+| Disbursement | disbursement@creditsea-lms.test |
+| Collection | collection@creditsea-lms.test |
+| Borrower | borrower@creditsea-lms.test |
+
+## Design Decisions
+
+**Role storage:** a single `role` enum field on the `User` document (`admin \| sales \| sanction \| disbursement \| collection \| borrower`). With exactly 6 fixed roles and no plans for custom/dynamic permissions, a separate roles/permissions collection would be unnecessary complexity.
+
+**Middleware design:** two composable layers, always applied in order. `authMiddleware` verifies the JWT and attaches the decoded payload to `req.user`; returns `401` if the token is missing, malformed, or invalid/expired. `roleMiddleware(...allowedRoles)` runs after it, checks `req.user.role` against an allow-list, and returns `403` if the role isn't permitted. This keeps "are you logged in" and "are you allowed to do this" as separate, independently-testable concerns.
+
+**HTTP status codes:** `401 Unauthorized` = no/invalid/expired token (an authentication problem). `403 Forbidden` = valid token, wrong role (an authorization problem). Kept strictly distinct across every protected route.
+
+**BRE placement (client vs. server):** covered in the borrower-flow section once Phase 2 lands — the short version is client-side for instant UX feedback, server-side as the actual source of truth, since client checks can be bypassed via a direct API call.
