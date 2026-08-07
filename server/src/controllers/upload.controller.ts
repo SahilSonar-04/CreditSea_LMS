@@ -1,10 +1,12 @@
 import { Request, Response } from "express";
-import path from "path";
+import { Types } from "mongoose";
 import { Application } from "../models/Application";
 
-const UPLOAD_DIR = path.join(__dirname, "../../uploads");
-
 const STAFF_VIEW_ROLES = new Set(["admin", "sanction"]);
+
+function getRouteParam(param: string | string[] | undefined): string | null {
+  return typeof param === "string" ? param : null;
+}
 
 export async function getSalarySlip(req: Request, res: Response): Promise<void> {
   try {
@@ -13,16 +15,17 @@ export async function getSalarySlip(req: Request, res: Response): Promise<void> 
       return;
     }
 
-    const rawFilename = req.params.filename;
-    const filename = typeof rawFilename === "string" ? rawFilename : null;
-
-    if (!filename || filename !== path.basename(filename)) {
-      res.status(400).json({ message: "Invalid file name" });
+    const applicationId = getRouteParam(req.params.id);
+    if (!applicationId || !Types.ObjectId.isValid(applicationId)) {
+      res.status(404).json({ message: "File not found" });
       return;
     }
 
-    const application = await Application.findOne({ salarySlipUrl: `/uploads/${filename}` });
-    if (!application) {
+    const application = await Application.findById(applicationId).select(
+      "+salarySlipData +salarySlipMimeType +salarySlipFileName borrowerId"
+    );
+
+    if (!application || !application.salarySlipData) {
       res.status(404).json({ message: "File not found" });
       return;
     }
@@ -35,11 +38,12 @@ export async function getSalarySlip(req: Request, res: Response): Promise<void> 
       return;
     }
 
-    res.sendFile(path.join(UPLOAD_DIR, filename), (error) => {
-      if (error && !res.headersSent) {
-        res.status(404).json({ message: "File not found" });
-      }
-    });
+    res.setHeader("Content-Type", application.salarySlipMimeType || "application/octet-stream");
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="${(application.salarySlipFileName || "salary-slip").replace(/"/g, "")}"`
+    );
+    res.send(application.salarySlipData);
   } catch (error) {
     res.status(500).json({ message: "Failed to retrieve file", error: (error as Error).message });
   }

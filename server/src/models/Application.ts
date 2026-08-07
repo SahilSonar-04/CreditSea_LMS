@@ -43,6 +43,9 @@ export interface IApplication extends Document {
   breReasons: string[];
 
   salarySlipUrl?: string;
+  salarySlipData?: Buffer;
+  salarySlipMimeType?: string;
+  salarySlipFileName?: string;
 
   loanAmount?: number;
   tenureDays?: number;
@@ -85,6 +88,9 @@ const applicationSchema = new Schema<IApplication>({
   breReasons: { type: [String], default: [] },
 
   salarySlipUrl: { type: String },
+  salarySlipData: { type: Buffer, select: false },
+  salarySlipMimeType: { type: String, select: false },
+  salarySlipFileName: { type: String, select: false },
 
   loanAmount: { type: Number },
   tenureDays: { type: Number },

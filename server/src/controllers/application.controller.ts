@@ -214,7 +214,10 @@ export async function uploadSlip(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    application.salarySlipUrl = `/uploads/${req.file.filename}`;
+    application.salarySlipData = req.file.buffer;
+    application.salarySlipMimeType = req.file.mimetype;
+    application.salarySlipFileName = req.file.originalname;
+    application.salarySlipUrl = `/uploads/${application._id}`;
     application.statusHistory.push({
       status: application.status,
       changedBy: new Types.ObjectId(req.user.userId),
