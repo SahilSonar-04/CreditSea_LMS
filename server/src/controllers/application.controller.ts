@@ -22,6 +22,16 @@ async function findOwnedApplication(applicationId: string, borrowerId: string) {
   return Application.findOne({ _id: applicationId, borrowerId });
 }
 
+function assertEditableDraft(application: { status: string }, res: Response): boolean {
+  if (application.status !== "DRAFT") {
+    res.status(400).json({
+      message: `This application can no longer be edited (current status: ${application.status})`,
+    });
+    return false;
+  }
+  return true;
+}
+
 export async function createOrGetDraft(req: Request, res: Response): Promise<void> {
   try {
     if (!req.user) {
@@ -90,6 +100,8 @@ export async function updatePersonalDetails(req: Request, res: Response): Promis
       res.status(404).json({ message: "Application not found" });
       return;
     }
+
+    if (!assertEditableDraft(application, res)) return;
 
     const { fullName, pan, dob, monthlySalary, employmentMode } = req.body;
 
@@ -174,6 +186,8 @@ export async function uploadSlip(req: Request, res: Response): Promise<void> {
       return;
     }
 
+    if (!assertEditableDraft(application, res)) return;
+
     if (application.breStatus !== "passed") {
       res.status(400).json({ message: "Personal details must pass eligibility checks before uploading a salary slip" });
       return;
@@ -218,6 +232,8 @@ export async function applyLoan(req: Request, res: Response): Promise<void> {
       res.status(404).json({ message: "Application not found" });
       return;
     }
+
+    if (!assertEditableDraft(application, res)) return;
 
     if (application.breStatus !== "passed") {
       res.status(400).json({ message: "Application does not meet eligibility criteria" });
