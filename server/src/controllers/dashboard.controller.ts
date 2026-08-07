@@ -114,6 +114,7 @@ export async function rejectApplication(req: Request, res: Response): Promise<vo
 
     application.status = "REJECTED";
     application.rejectionReason = reason;
+    application.activeSlot = undefined;
     application.statusHistory.push({
       status: "REJECTED",
       changedBy: new Types.ObjectId(req.user.userId),
@@ -276,6 +277,7 @@ export async function recordPayment(req: Request, res: Response): Promise<void> 
     if (application.outstandingBalance <= 0) {
       application.status = "CLOSED";
       application.closedAt = new Date();
+      application.activeSlot = undefined;
       application.statusHistory.push({
         status: "CLOSED",
         changedBy: new Types.ObjectId(req.user.userId),

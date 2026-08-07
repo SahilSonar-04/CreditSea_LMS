@@ -45,7 +45,6 @@ export async function createOrGetDraft(req: Request, res: Response): Promise<voi
       borrowerId,
       status: { $nin: ["CLOSED", "REJECTED"] },
     }).sort({ createdAt: -1 });
-    
     if (existingApplication) {
       res.status(200).json({ application: existingApplication });
       return;
@@ -59,6 +58,7 @@ export async function createOrGetDraft(req: Request, res: Response): Promise<voi
         application = await Application.create({
           loanRefNumber,
           borrowerId,
+          activeSlot: borrowerId,
           status: "DRAFT",
           breStatus: "pending",
           breReasons: [],
@@ -69,8 +69,20 @@ export async function createOrGetDraft(req: Request, res: Response): Promise<voi
         });
         break;
       } catch (error) {
-        // A concurrent draft may have claimed this reference number; generate the next one and retry.
-        if ((error as { code?: number }).code !== 11000 || attempt === 2) {
+        const mongoError = error as { code?: number; keyPattern?: Record<string, unknown> };
+
+        if (mongoError.code === 11000 && mongoError.keyPattern?.activeSlot) {
+          const concurrentApplication = await Application.findOne({
+            borrowerId,
+            status: { $nin: ["CLOSED", "REJECTED"] },
+          }).sort({ createdAt: -1 });
+          if (concurrentApplication) {
+            res.status(200).json({ application: concurrentApplication });
+            return;
+          }
+        }
+
+        if (mongoError.code !== 11000 || attempt === 2) {
           throw error;
         }
       }

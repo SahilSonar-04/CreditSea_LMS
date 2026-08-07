@@ -59,6 +59,7 @@ export interface IApplication extends Document {
   statusHistory: IStatusHistoryEntry[];
 
   createdAt: Date;
+  activeSlot?: Types.ObjectId;
 }
 
 const statusHistorySchema = new Schema<IStatusHistoryEntry>(
@@ -100,6 +101,12 @@ const applicationSchema = new Schema<IApplication>({
   statusHistory: { type: [statusHistorySchema], default: [] },
 
   createdAt: { type: Date, default: Date.now },
+  activeSlot: { type: Schema.Types.ObjectId },
 });
+
+applicationSchema.index(
+  { activeSlot: 1 },
+  { unique: true, partialFilterExpression: { activeSlot: { $exists: true } } }
+);
 
 export const Application = model<IApplication>("Application", applicationSchema);
