@@ -46,7 +46,9 @@ export default function SignInPage() {
         </div>
 
         <div>
-          <label htmlFor="email" className="field-label">Email</label>
+          <label htmlFor="email" className="field-label">
+            Email <span className="text-rose-500">*</span>
+          </label>
           <input
             id="email"
             type="email"
@@ -58,7 +60,9 @@ export default function SignInPage() {
         </div>
 
         <div>
-          <label htmlFor="password" className="field-label">Password</label>
+          <label htmlFor="password" className="field-label">
+            Password <span className="text-rose-500">*</span>
+          </label>
           <input
             id="password"
             type="password"
@@ -71,11 +75,7 @@ export default function SignInPage() {
 
         {error && <p className="alert-error">{error}</p>}
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="btn-primary w-full"
-        >
+        <button type="submit" disabled={loading} className="btn-primary w-full">
           {loading ? "Signing in..." : "Sign in"}
         </button>
 

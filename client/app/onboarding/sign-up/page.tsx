@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useMemo, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, ApiError } from "@/lib/api";
 import { saveSession } from "@/lib/auth";
+import { validatePasswordClient, validatePhoneClient } from "@/lib/validation";
 import { AuthResponse } from "@/types/auth";
 import BrandMark from "@/components/BrandMark";
 
@@ -15,11 +16,29 @@ export default function SignUpPage() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [serverPasswordReasons, setServerPasswordReasons] = useState<string[]>([]);
+  const [serverPhoneReasons, setServerPhoneReasons] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [touched, setTouched] = useState({ phone: false, password: false });
+
+  const passwordCheck = useMemo(() => validatePasswordClient(password), [password]);
+  const phoneCheck = useMemo(() => validatePhoneClient(phone), [phone]);
+
+  const canSubmit =
+    name.trim().length > 0 && email.trim().length > 0 && passwordCheck.valid && phoneCheck.valid;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    setServerPasswordReasons([]);
+    setServerPhoneReasons([]);
+    setTouched({ phone: true, password: true });
+
+    if (!passwordCheck.valid || !phoneCheck.valid) {
+      setError("Please fix the highlighted fields before continuing");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -30,7 +49,13 @@ export default function SignUpPage() {
       saveSession(data.token, data.user);
       router.push("/borrower");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      if (err instanceof ApiError) {
+        setError(err.message);
+        setServerPasswordReasons((err.data.passwordReasons as string[] | undefined) || []);
+        setServerPhoneReasons((err.data.phoneReasons as string[] | undefined) || []);
+      } else {
+        setError("Something went wrong");
+      }
     } finally {
       setLoading(false);
     }
@@ -47,7 +72,9 @@ export default function SignUpPage() {
         </div>
 
         <div>
-          <label htmlFor="name" className="field-label">Full name</label>
+          <label htmlFor="name" className="field-label">
+            Full name <span className="text-rose-500">*</span>
+          </label>
           <input
             id="name"
             required
@@ -58,7 +85,9 @@ export default function SignUpPage() {
         </div>
 
         <div>
-          <label htmlFor="email" className="field-label">Email</label>
+          <label htmlFor="email" className="field-label">
+            Email <span className="text-rose-500">*</span>
+          </label>
           <input
             id="email"
             type="email"
@@ -70,35 +99,74 @@ export default function SignUpPage() {
         </div>
 
         <div>
-          <label htmlFor="phone" className="field-label">Phone</label>
+          <label htmlFor="phone" className="field-label">
+            Phone <span className="text-rose-500">*</span>
+          </label>
           <input
             id="phone"
+            required
+            inputMode="numeric"
+            maxLength={10}
+            placeholder="10-digit mobile number"
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+            onBlur={() => setTouched((t) => ({ ...t, phone: true }))}
             className="field-control"
           />
+          {touched.phone && !phoneCheck.valid && (
+            <p className="mt-1 text-xs text-rose-600">{phoneCheck.reasons[0]}</p>
+          )}
+          {serverPhoneReasons.length > 0 && (
+            <ul className="mt-1 list-disc pl-4 text-xs text-rose-600">
+              {serverPhoneReasons.map((reason) => (
+                <li key={reason}>{reason}</li>
+              ))}
+            </ul>
+          )}
         </div>
 
         <div>
-          <label htmlFor="password" className="field-label">Password</label>
+          <label htmlFor="password" className="field-label">
+            Password <span className="text-rose-500">*</span>
+          </label>
           <input
             id="password"
             type="password"
             required
-            minLength={8}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            onBlur={() => setTouched((t) => ({ ...t, password: true }))}
             className="field-control"
           />
+          <ul className="mt-2 grid gap-1 text-xs sm:grid-cols-2">
+            {[
+              { label: "At least 8 characters", met: password.length >= 8 },
+              { label: "One uppercase letter", met: /[A-Z]/.test(password) },
+              { label: "One lowercase letter", met: /[a-z]/.test(password) },
+              { label: "One number", met: /[0-9]/.test(password) },
+              { label: "One symbol", met: /[^a-zA-Z0-9\s]/.test(password) },
+            ].map((rule) => (
+              <li
+                key={rule.label}
+                className={`flex items-center gap-1.5 ${rule.met ? "text-emerald-600" : "text-slate-400"}`}
+              >
+                <span>{rule.met ? "✓" : "○"}</span>
+                {rule.label}
+              </li>
+            ))}
+          </ul>
+          {serverPasswordReasons.length > 0 && (
+            <ul className="mt-2 list-disc pl-4 text-xs text-rose-600">
+              {serverPasswordReasons.map((reason) => (
+                <li key={reason}>{reason}</li>
+              ))}
+            </ul>
+          )}
         </div>
 
         {error && <p className="alert-error">{error}</p>}
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="btn-primary w-full"
-        >
+        <button type="submit" disabled={loading || !canSubmit} className="btn-primary w-full">
           {loading ? "Creating account..." : "Sign up"}
         </button>
 

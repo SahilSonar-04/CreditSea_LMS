@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import { User } from "../models/User";
 import { signToken } from "../utils/jwt.util";
 import { validatePassword } from "../utils/password.util";
+import { validatePhone } from "../utils/phone.util";
 
 const SALT_ROUNDS = 10;
 
@@ -10,8 +11,8 @@ export async function signUp(req: Request, res: Response): Promise<void> {
   try {
     const { name, email, password, phone } = req.body;
 
-    if (!name || !email || !password) {
-      res.status(400).json({ message: "name, email and password are required" });
+    if (!name || !email || !password || !phone) {
+      res.status(400).json({ message: "name, email, phone and password are required" });
       return;
     }
 
@@ -20,6 +21,15 @@ export async function signUp(req: Request, res: Response): Promise<void> {
       res.status(400).json({
         message: "Password does not meet the minimum requirements",
         passwordReasons: passwordCheck.reasons,
+      });
+      return;
+    }
+
+    const phoneCheck = validatePhone(phone);
+    if (!phoneCheck.valid) {
+      res.status(400).json({
+        message: "Phone number is invalid",
+        phoneReasons: phoneCheck.reasons,
       });
       return;
     }
@@ -38,7 +48,7 @@ export async function signUp(req: Request, res: Response): Promise<void> {
       password: hashedPassword,
       // Executive roles are provisioned through the seed/admin workflow, never by public sign-up.
       role: "borrower",
-      phone,
+      phone: String(phone).trim(),
     });
 
     const token = signToken({ userId: user._id.toString(), role: user.role });

@@ -21,9 +21,9 @@ export interface IUser extends Document {
   _id: Types.ObjectId;
   name: string;
   email: string;
-  password: string; // bcrypt hash, never the plaintext
+  password: string;
   role: UserRole;
-  phone?: string;
+  phone: string;
   createdAt: Date;
 }
 
@@ -38,7 +38,7 @@ const userSchema = new Schema<IUser>({
   },
   password: { type: String, required: true },
   role: { type: String, enum: USER_ROLES, required: true },
-  phone: { type: String, trim: true },
+  phone: { type: String, required: true, trim: true },
   createdAt: { type: Date, default: Date.now },
 });
 
