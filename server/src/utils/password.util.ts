@@ -1,5 +1,5 @@
 const MIN_PASSWORD_LENGTH = 8;
-const MAX_PASSWORD_LENGTH = 72; // bcrypt silently truncates/ignores input beyond 72 bytes
+const MAX_PASSWORD_LENGTH = 72;
 
 export interface PasswordValidationResult {
   valid: boolean;
@@ -14,11 +14,15 @@ export function validatePassword(password: unknown): PasswordValidationResult {
   }
 
   if (password.length < MIN_PASSWORD_LENGTH) {
-    reasons.push(`Password must be at least ${MIN_PASSWORD_LENGTH} characters long`);
+    reasons.push(
+      `Password must be at least ${MIN_PASSWORD_LENGTH} characters long`,
+    );
   }
 
   if (password.length > MAX_PASSWORD_LENGTH) {
-    reasons.push(`Password must be at most ${MAX_PASSWORD_LENGTH} characters long`);
+    reasons.push(
+      `Password must be at most ${MAX_PASSWORD_LENGTH} characters long`,
+    );
   }
 
   if (!/[a-zA-Z]/.test(password)) {
