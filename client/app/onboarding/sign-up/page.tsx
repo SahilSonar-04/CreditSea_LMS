@@ -28,7 +28,7 @@ export default function SignUpPage() {
         body: JSON.stringify({ name, email, phone, password }),
       });
       saveSession(data.token, data.user);
-      router.push("/apply");
+      router.push("/borrower");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {

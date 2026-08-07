@@ -27,7 +27,7 @@ export default function SignInPage() {
       });
       saveSession(data.token, data.user);
 
-      router.push(data.user.role === "borrower" ? "/apply" : `/dashboard/${data.user.role}`);
+      router.push(data.user.role === "borrower" ? "/borrower" : `/dashboard/${data.user.role}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
