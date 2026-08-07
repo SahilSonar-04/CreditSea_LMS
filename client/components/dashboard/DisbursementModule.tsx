@@ -12,22 +12,22 @@ export default function DisbursementModule() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
-  async function load() {
-    const token = getToken();
-    try {
-      const data = await apiFetch<{ applications: Application[] }>("/dashboard/disbursement", {
-        token: token || undefined,
-      });
-      setApplications(data.applications);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
-  }
-
   useEffect(() => {
-    load();
+    async function loadQueue() {
+      const token = getToken();
+      try {
+        const data = await apiFetch<{ applications: Application[] }>("/dashboard/disbursement", {
+          token: token || undefined,
+        });
+        setApplications(data.applications);
+      } catch (err) {
+        setError(err instanceof ApiError ? err.message : "Something went wrong");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    void loadQueue();
   }, []);
 
   async function handleDisburse(id: string) {

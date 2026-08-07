@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch, ApiError } from "@/lib/api";
 import { getToken } from "@/lib/auth";
-import { getApplicationId } from "@/lib/application";
+import { useApplicationId } from "@/lib/application";
 import { checkBreClientSide } from "@/lib/bre";
 import { Application, EmploymentMode } from "@/types/application";
 
@@ -12,7 +12,7 @@ const EMPLOYMENT_MODES: EmploymentMode[] = ["Salaried", "Self-Employed", "Unempl
 
 export default function PersonalDetailsPage() {
   const router = useRouter();
-  const [applicationId, setApplicationId] = useState<string | null>(null);
+  const applicationId = useApplicationId();
 
   const [fullName, setFullName] = useState("");
   const [pan, setPan] = useState("");
@@ -26,20 +26,17 @@ export default function PersonalDetailsPage() {
 
   useEffect(() => {
     const token = getToken();
-    const id = getApplicationId();
 
     if (!token) {
       router.replace("/onboarding/sign-in");
       return;
     }
 
-    if (!id) {
+    if (applicationId === null) {
       router.replace("/apply");
       return;
     }
-
-    setApplicationId(id);
-  }, [router]);
+  }, [applicationId, router]);
 
   const livePreview = useMemo(() => {
     if (!pan || !dob || !monthlySalary || !employmentMode) return null;

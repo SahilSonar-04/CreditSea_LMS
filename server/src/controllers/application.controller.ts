@@ -13,6 +13,10 @@ import {
 } from "../utils/loanMath.util";
 import { generateLoanRefNumber } from "../utils/refNumber.util";
 
+function getRouteParam(param: string | string[] | undefined): string | null {
+  return typeof param === "string" ? param : null;
+}
+
 async function findOwnedApplication(applicationId: string, borrowerId: string) {
   if (!Types.ObjectId.isValid(applicationId)) return null;
   return Application.findOne({ _id: applicationId, borrowerId });
@@ -60,7 +64,13 @@ export async function updatePersonalDetails(req: Request, res: Response): Promis
       return;
     }
 
-    const application = await findOwnedApplication(req.params.id, req.user.userId);
+    const applicationId = getRouteParam(req.params.id);
+    if (!applicationId) {
+      res.status(404).json({ message: "Application not found" });
+      return;
+    }
+
+    const application = await findOwnedApplication(applicationId, req.user.userId);
     if (!application) {
       res.status(404).json({ message: "Application not found" });
       return;
@@ -80,17 +90,29 @@ export async function updatePersonalDetails(req: Request, res: Response): Promis
       return;
     }
 
+    const parsedDob = new Date(dob);
+    if (Number.isNaN(parsedDob.getTime())) {
+      res.status(400).json({ message: "dob must be a valid date" });
+      return;
+    }
+
+    const parsedSalary = Number(monthlySalary);
+    if (!Number.isFinite(parsedSalary) || parsedSalary < 0) {
+      res.status(400).json({ message: "monthlySalary must be a non-negative number" });
+      return;
+    }
+
     const bre = runBre({
-      dob: new Date(dob),
-      monthlySalary: Number(monthlySalary),
+      dob: parsedDob,
+      monthlySalary: parsedSalary,
       pan: String(pan).toUpperCase(),
       employmentMode: employmentMode as EmploymentMode,
     });
 
     application.fullName = fullName;
     application.pan = String(pan).toUpperCase();
-    application.dob = new Date(dob);
-    application.monthlySalary = Number(monthlySalary);
+    application.dob = parsedDob;
+    application.monthlySalary = parsedSalary;
     application.employmentMode = employmentMode;
     application.breStatus = bre.passed ? "passed" : "failed";
     application.breReasons = bre.reasons;
@@ -125,7 +147,13 @@ export async function uploadSlip(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    const application = await findOwnedApplication(req.params.id, req.user.userId);
+    const applicationId = getRouteParam(req.params.id);
+    if (!applicationId) {
+      res.status(404).json({ message: "Application not found" });
+      return;
+    }
+
+    const application = await findOwnedApplication(applicationId, req.user.userId);
     if (!application) {
       res.status(404).json({ message: "Application not found" });
       return;
@@ -164,7 +192,13 @@ export async function applyLoan(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    const application = await findOwnedApplication(req.params.id, req.user.userId);
+    const applicationId = getRouteParam(req.params.id);
+    if (!applicationId) {
+      res.status(404).json({ message: "Application not found" });
+      return;
+    }
+
+    const application = await findOwnedApplication(applicationId, req.user.userId);
     if (!application) {
       res.status(404).json({ message: "Application not found" });
       return;
@@ -188,7 +222,12 @@ export async function applyLoan(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    if (!Number.isFinite(tenure) || tenure < MIN_TENURE_DAYS || tenure > MAX_TENURE_DAYS) {
+    if (Math.abs(amount * 100 - Math.round(amount * 100)) > Number.EPSILON) {
+      res.status(400).json({ message: "loanAmount can have at most two decimal places" });
+      return;
+    }
+
+    if (!Number.isInteger(tenure) || tenure < MIN_TENURE_DAYS || tenure > MAX_TENURE_DAYS) {
       res.status(400).json({ message: `tenureDays must be between ${MIN_TENURE_DAYS} and ${MAX_TENURE_DAYS}` });
       return;
     }

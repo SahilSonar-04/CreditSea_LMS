@@ -59,4 +59,4 @@ Password for every seeded account: `Password123!`
 
 **HTTP status codes:** `401 Unauthorized` = no/invalid/expired token (an authentication problem). `403 Forbidden` = valid token, wrong role (an authorization problem). Kept strictly distinct across every protected route.
 
-**BRE placement (client vs. server):** covered in the borrower-flow section once Phase 2 lands — the short version is client-side for instant UX feedback, server-side as the actual source of truth, since client checks can be bypassed via a direct API call.
+**BRE placement (client vs. server):** the client mirrors the BRE for instant feedback while the applicant completes the form, but the server is the source of truth and re-validates every rule before accepting personal details. Client-side checks can be bypassed with a direct API call, so a business-critical eligibility decision must never rely on them alone.

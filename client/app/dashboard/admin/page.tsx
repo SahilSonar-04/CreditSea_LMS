@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getUser } from "@/lib/auth";
+import { useSessionUser } from "@/lib/auth";
 
 const MODULES = [
   { role: "sales", label: "Sales" },
@@ -14,10 +14,12 @@ const MODULES = [
 
 export default function AdminOverviewPage() {
   const router = useRouter();
-  const [allowed, setAllowed] = useState(false);
+  const user = useSessionUser();
+  const allowed = user?.role === "admin";
 
   useEffect(() => {
-    const user = getUser();
+    if (user === undefined) return;
+
     if (!user) {
       router.replace("/onboarding/sign-in");
       return;
@@ -26,8 +28,7 @@ export default function AdminOverviewPage() {
       router.replace(user.role === "borrower" ? "/apply" : `/dashboard/${user.role}`);
       return;
     }
-    setAllowed(true);
-  }, [router]);
+  }, [router, user]);
 
   if (!allowed) {
     return <p className="text-sm text-gray-500">Loading...</p>;

@@ -14,22 +14,22 @@ export default function SanctionModule() {
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
 
-  async function load() {
-    const token = getToken();
-    try {
-      const data = await apiFetch<{ applications: Application[] }>("/dashboard/sanction", {
-        token: token || undefined,
-      });
-      setApplications(data.applications);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
-  }
-
   useEffect(() => {
-    load();
+    async function loadQueue() {
+      const token = getToken();
+      try {
+        const data = await apiFetch<{ applications: Application[] }>("/dashboard/sanction", {
+          token: token || undefined,
+        });
+        setApplications(data.applications);
+      } catch (err) {
+        setError(err instanceof ApiError ? err.message : "Something went wrong");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    void loadQueue();
   }, []);
 
   async function handleApprove(id: string) {

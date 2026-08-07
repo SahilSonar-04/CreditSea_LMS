@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getToken, getUser, clearSession } from "@/lib/auth";
-import { AuthUser, UserRole } from "@/types/auth";
+import { getToken, useSessionUser, clearSession } from "@/lib/auth";
+import { UserRole } from "@/types/auth";
 
 const MODULES: { role: Exclude<UserRole, "admin" | "borrower">; label: string }[] = [
   { role: "sales", label: "Sales" },
@@ -15,11 +15,13 @@ const MODULES: { role: Exclude<UserRole, "admin" | "borrower">; label: string }[
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const user = useSessionUser();
 
   useEffect(() => {
+    if (user === undefined) return;
+
     const token = getToken();
-    const currentUser = getUser();
+    const currentUser = user;
 
     if (!token || !currentUser) {
       router.replace("/onboarding/sign-in");
@@ -31,8 +33,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       return;
     }
 
-    setUser(currentUser);
-  }, [router]);
+  }, [router, user]);
 
   function handleSignOut() {
     clearSession();

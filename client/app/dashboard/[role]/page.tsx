@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { getUser } from "@/lib/auth";
-import { AuthUser } from "@/types/auth";
+import { useSessionUser } from "@/lib/auth";
 import SalesModule from "@/components/dashboard/SalesModule";
 import SanctionModule from "@/components/dashboard/SanctionModule";
 import DisbursementModule from "@/components/dashboard/DisbursementModule";
@@ -19,31 +18,30 @@ function isDashboardRole(value: string): value is DashboardRole {
 export default function DashboardModulePage() {
   const router = useRouter();
   const params = useParams<{ role: string }>();
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [allowed, setAllowed] = useState(false);
+  const user = useSessionUser();
+  const isValidModule = isDashboardRole(params.role);
+  const allowed = Boolean(user && isValidModule && (user.role === "admin" || user.role === params.role));
 
   useEffect(() => {
-    const currentUser = getUser();
-    if (!currentUser) {
+    if (user === undefined) return;
+
+    if (!user) {
       router.replace("/onboarding/sign-in");
       return;
     }
 
-    if (!isDashboardRole(params.role)) {
-      router.replace(currentUser.role === "borrower" ? "/apply" : `/dashboard/${currentUser.role}`);
+    if (!isValidModule) {
+      router.replace(user.role === "borrower" ? "/apply" : `/dashboard/${user.role}`);
       return;
     }
 
-    if (currentUser.role !== "admin" && currentUser.role !== params.role) {
-      router.replace(`/dashboard/${currentUser.role}`);
+    if (user.role !== "admin" && user.role !== params.role) {
+      router.replace(`/dashboard/${user.role}`);
       return;
     }
+  }, [isValidModule, params.role, router, user]);
 
-    setUser(currentUser);
-    setAllowed(true);
-  }, [params.role, router]);
-
-  if (!allowed || !user || !isDashboardRole(params.role)) {
+  if (!allowed || !user || !isValidModule) {
     return <p className="text-sm text-gray-500">Loading...</p>;
   }
 

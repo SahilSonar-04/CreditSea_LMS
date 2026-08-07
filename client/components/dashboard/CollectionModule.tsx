@@ -22,22 +22,22 @@ export default function CollectionModule() {
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  async function load() {
-    const token = getToken();
-    try {
-      const data = await apiFetch<{ applications: Application[] }>("/dashboard/collection", {
-        token: token || undefined,
-      });
-      setApplications(data.applications);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
-  }
-
   useEffect(() => {
-    load();
+    async function loadQueue() {
+      const token = getToken();
+      try {
+        const data = await apiFetch<{ applications: Application[] }>("/dashboard/collection", {
+          token: token || undefined,
+        });
+        setApplications(data.applications);
+      } catch (err) {
+        setError(err instanceof ApiError ? err.message : "Something went wrong");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    void loadQueue();
   }, []);
 
   function openForm(id: string) {

@@ -1,5 +1,6 @@
-import express, { Express, Request, Response } from "express";
+import express, { ErrorRequestHandler, Express, Request, Response } from "express";
 import cors from "cors";
+import multer from "multer";
 import path from "path";
 import onboardingRoutes from "./routes/onboarding.routes";
 import dashboardRoutes from "./routes/dashboard.routes";
@@ -19,5 +20,22 @@ app.get("/api/health", (_req: Request, res: Response) => {
 app.use("/api/onboarding", onboardingRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/applications", applicationRoutes);
+
+const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
+  if (error instanceof multer.MulterError && error.code === "LIMIT_FILE_SIZE") {
+    res.status(400).json({ message: "Salary slip must be 5MB or smaller" });
+    return;
+  }
+
+  if (error instanceof Error && error.message === "Only PDF, JPG, and PNG files are allowed") {
+    res.status(400).json({ message: error.message });
+    return;
+  }
+
+  console.error("[server] Unhandled request error:", error);
+  res.status(500).json({ message: "Internal server error" });
+};
+
+app.use(errorHandler);
 
 export default app;

@@ -24,7 +24,7 @@ export default function SignUpPage() {
     try {
       const data = await apiFetch<AuthResponse>("/onboarding/sign-up", {
         method: "POST",
-        body: JSON.stringify({ name, email, phone, password, role: "borrower" }),
+        body: JSON.stringify({ name, email, phone, password }),
       });
       saveSession(data.token, data.user);
       router.push("/apply");

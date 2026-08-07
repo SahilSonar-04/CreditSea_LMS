@@ -1,21 +1,16 @@
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
-import { User, USER_ROLES } from "../models/User";
+import { User } from "../models/User";
 import { signToken } from "../utils/jwt.util";
 
 const SALT_ROUNDS = 10;
 
 export async function signUp(req: Request, res: Response): Promise<void> {
   try {
-    const { name, email, password, phone, role } = req.body;
+    const { name, email, password, phone } = req.body;
 
-    if (!name || !email || !password || !role) {
-      res.status(400).json({ message: "name, email, password and role are required" });
-      return;
-    }
-
-    if (!USER_ROLES.includes(role)) {
-      res.status(400).json({ message: `role must be one of: ${USER_ROLES.join(", ")}` });
+    if (!name || !email || !password) {
+      res.status(400).json({ message: "name, email and password are required" });
       return;
     }
 
@@ -31,7 +26,8 @@ export async function signUp(req: Request, res: Response): Promise<void> {
       name,
       email: email.toLowerCase(),
       password: hashedPassword,
-      role,
+      // Executive roles are provisioned through the seed/admin workflow, never by public sign-up.
+      role: "borrower",
       phone,
     });
 

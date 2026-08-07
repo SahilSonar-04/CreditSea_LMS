@@ -4,6 +4,10 @@ import { Application } from "../models/Application";
 import { User } from "../models/User";
 import { Payment } from "../models/Payment";
 
+function getRouteParam(param: string | string[] | undefined): string | null {
+  return typeof param === "string" ? param : null;
+}
+
 export async function getSalesLeads(_req: Request, res: Response): Promise<void> {
   try {
     const appliedBorrowerIds = await Application.distinct("borrowerId", {
@@ -39,12 +43,13 @@ export async function approveApplication(req: Request, res: Response): Promise<v
       return;
     }
 
-    if (!Types.ObjectId.isValid(req.params.id)) {
+    const applicationId = getRouteParam(req.params.id);
+    if (!applicationId || !Types.ObjectId.isValid(applicationId)) {
       res.status(404).json({ message: "Application not found" });
       return;
     }
 
-    const application = await Application.findById(req.params.id);
+    const application = await Application.findById(applicationId);
     if (!application) {
       res.status(404).json({ message: "Application not found" });
       return;
@@ -78,7 +83,8 @@ export async function rejectApplication(req: Request, res: Response): Promise<vo
       return;
     }
 
-    if (!Types.ObjectId.isValid(req.params.id)) {
+    const applicationId = getRouteParam(req.params.id);
+    if (!applicationId || !Types.ObjectId.isValid(applicationId)) {
       res.status(404).json({ message: "Application not found" });
       return;
     }
@@ -89,7 +95,7 @@ export async function rejectApplication(req: Request, res: Response): Promise<vo
       return;
     }
 
-    const application = await Application.findById(req.params.id);
+    const application = await Application.findById(applicationId);
     if (!application) {
       res.status(404).json({ message: "Application not found" });
       return;
@@ -132,12 +138,13 @@ export async function disburseApplication(req: Request, res: Response): Promise<
       return;
     }
 
-    if (!Types.ObjectId.isValid(req.params.id)) {
+    const applicationId = getRouteParam(req.params.id);
+    if (!applicationId || !Types.ObjectId.isValid(applicationId)) {
       res.status(404).json({ message: "Application not found" });
       return;
     }
 
-    const application = await Application.findById(req.params.id);
+    const application = await Application.findById(applicationId);
     if (!application) {
       res.status(404).json({ message: "Application not found" });
       return;
@@ -180,12 +187,13 @@ export async function recordPayment(req: Request, res: Response): Promise<void> 
       return;
     }
 
-    if (!Types.ObjectId.isValid(req.params.loanId)) {
+    const loanId = getRouteParam(req.params.loanId);
+    if (!loanId || !Types.ObjectId.isValid(loanId)) {
       res.status(404).json({ message: "Application not found" });
       return;
     }
 
-    const application = await Application.findById(req.params.loanId);
+    const application = await Application.findById(loanId);
     if (!application) {
       res.status(404).json({ message: "Application not found" });
       return;
@@ -209,6 +217,17 @@ export async function recordPayment(req: Request, res: Response): Promise<void> 
       return;
     }
 
+    if (Math.abs(parsedAmount * 100 - Math.round(parsedAmount * 100)) > Number.EPSILON) {
+      res.status(400).json({ message: "amount can have at most two decimal places" });
+      return;
+    }
+
+    const paymentDate = date ? new Date(date) : new Date();
+    if (Number.isNaN(paymentDate.getTime())) {
+      res.status(400).json({ message: "date must be a valid date" });
+      return;
+    }
+
     const outstanding = application.outstandingBalance ?? 0;
     if (parsedAmount > outstanding) {
       res.status(400).json({ message: `Payment amount exceeds outstanding balance of ${outstanding}` });
@@ -229,11 +248,10 @@ export async function recordPayment(req: Request, res: Response): Promise<void> 
         loanId: application._id,
         utrNumber: normalizedUtr,
         amount: parsedAmount,
-        date: date ? new Date(date) : new Date(),
+        date: paymentDate,
         recordedBy: new Types.ObjectId(req.user.userId),
       });
     } catch (createError) {
-      // Backstop against the unique index in case of a race with the check above.
       if ((createError as { code?: number }).code === 11000) {
         res.status(409).json({ message: "A payment with this UTR number already exists" });
         return;

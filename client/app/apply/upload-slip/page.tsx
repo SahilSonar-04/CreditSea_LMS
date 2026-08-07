@@ -4,7 +4,7 @@ import { useEffect, useState, FormEvent, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetchForm, ApiError } from "@/lib/api";
 import { getToken } from "@/lib/auth";
-import { getApplicationId } from "@/lib/application";
+import { useApplicationId } from "@/lib/application";
 import { Application } from "@/types/application";
 
 const ALLOWED_TYPES = ["application/pdf", "image/jpeg", "image/png"];
@@ -12,27 +12,24 @@ const MAX_SIZE_BYTES = 5 * 1024 * 1024;
 
 export default function UploadSlipPage() {
   const router = useRouter();
-  const [applicationId, setApplicationId] = useState<string | null>(null);
+  const applicationId = useApplicationId();
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const token = getToken();
-    const id = getApplicationId();
 
     if (!token) {
       router.replace("/onboarding/sign-in");
       return;
     }
 
-    if (!id) {
+    if (applicationId === null) {
       router.replace("/apply");
       return;
     }
-
-    setApplicationId(id);
-  }, [router]);
+  }, [applicationId, router]);
 
   function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
     const selected = e.target.files?.[0] || null;

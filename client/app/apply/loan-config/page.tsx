@@ -4,13 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch, ApiError } from "@/lib/api";
 import { getToken } from "@/lib/auth";
-import { getApplicationId, clearApplicationId } from "@/lib/application";
+import { useApplicationId, clearApplicationId } from "@/lib/application";
 import { calculateSimpleInterest, calculateTotalRepayment, LOAN_LIMITS } from "@/lib/bre";
 import { Application } from "@/types/application";
 
 export default function LoanConfigPage() {
   const router = useRouter();
-  const [applicationId, setApplicationId] = useState<string | null>(null);
+  const applicationId = useApplicationId();
   const [loanAmount, setLoanAmount] = useState(LOAN_LIMITS.MIN_AMOUNT);
   const [tenureDays, setTenureDays] = useState(LOAN_LIMITS.MIN_TENURE_DAYS);
   const [error, setError] = useState<string | null>(null);
@@ -18,20 +18,17 @@ export default function LoanConfigPage() {
 
   useEffect(() => {
     const token = getToken();
-    const id = getApplicationId();
 
     if (!token) {
       router.replace("/onboarding/sign-in");
       return;
     }
 
-    if (!id) {
+    if (applicationId === null) {
       router.replace("/apply");
       return;
     }
-
-    setApplicationId(id);
-  }, [router]);
+  }, [applicationId, router]);
 
   const simpleInterest = useMemo(
     () => calculateSimpleInterest(loanAmount, tenureDays),
