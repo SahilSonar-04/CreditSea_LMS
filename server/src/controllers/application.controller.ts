@@ -31,25 +31,40 @@ export async function createOrGetDraft(req: Request, res: Response): Promise<voi
 
     const borrowerId = req.user.userId;
 
-    const existingDraft = await Application.findOne({ borrowerId, status: "DRAFT" });
-    if (existingDraft) {
-      res.status(200).json({ application: existingDraft });
+    const existingApplication = await Application.findOne({ borrowerId }).sort({ createdAt: -1 });
+    if (existingApplication) {
+      res.status(200).json({ application: existingApplication });
       return;
     }
 
-    const loanRefNumber = await generateLoanRefNumber();
+    let application;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const loanRefNumber = await generateLoanRefNumber();
 
-    const application = await Application.create({
-      loanRefNumber,
-      borrowerId,
-      status: "DRAFT",
-      breStatus: "pending",
-      breReasons: [],
-      interestRate: INTEREST_RATE,
-      statusHistory: [
-        { status: "DRAFT", changedBy: new Types.ObjectId(borrowerId), changedAt: new Date(), note: "Application created" },
-      ],
-    });
+      try {
+        application = await Application.create({
+          loanRefNumber,
+          borrowerId,
+          status: "DRAFT",
+          breStatus: "pending",
+          breReasons: [],
+          interestRate: INTEREST_RATE,
+          statusHistory: [
+            { status: "DRAFT", changedBy: new Types.ObjectId(borrowerId), changedAt: new Date(), note: "Application created" },
+          ],
+        });
+        break;
+      } catch (error) {
+        // A concurrent draft may have claimed this reference number; generate the next one and retry.
+        if ((error as { code?: number }).code !== 11000 || attempt === 2) {
+          throw error;
+        }
+      }
+    }
+
+    if (!application) {
+      throw new Error("Unable to allocate a loan reference number");
+    }
 
     res.status(201).json({ application });
   } catch (error) {
