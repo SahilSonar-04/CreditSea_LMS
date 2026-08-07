@@ -5,6 +5,7 @@ import onboardingRoutes from "./routes/onboarding.routes";
 import dashboardRoutes from "./routes/dashboard.routes";
 import applicationRoutes from "./routes/application.routes";
 import uploadRoutes from "./routes/upload.routes";
+import userRoutes from "./routes/user.routes";
 
 const app: Express = express();
 
@@ -20,6 +21,7 @@ app.use("/api/onboarding", onboardingRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/applications", applicationRoutes);
 app.use("/api/uploads", uploadRoutes);
+app.use("/api/users", userRoutes);
 
 const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
   if (error instanceof multer.MulterError && error.code === "LIMIT_FILE_SIZE") {

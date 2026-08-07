@@ -17,3 +17,8 @@ export interface AuthResponse {
   token: string;
   user: AuthUser;
 }
+
+export interface UserProfile extends AuthUser {
+  phone: string | null;
+  createdAt: string;
+}
