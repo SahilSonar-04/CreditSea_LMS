@@ -4,7 +4,7 @@ import { User, USER_ROLES, UserRole } from "../models/User";
 import mongoose from "mongoose";
 
 const SALT_ROUNDS = 10;
-const SEED_PASSWORD = "Password123!";
+const SEED_PASSWORD = "Password@123";
 
 async function seed(): Promise<void> {
   await connectDB();
@@ -12,7 +12,7 @@ async function seed(): Promise<void> {
   const created: { role: UserRole; email: string }[] = [];
 
   for (const role of USER_ROLES) {
-    const email = `${role}@creditsea-lms.test`;
+    const email = `${role}@creditsea.test`;
 
     const existing = await User.findOne({ email });
     if (existing) {
@@ -35,7 +35,7 @@ async function seed(): Promise<void> {
 
   console.log("\n[seed] Done. Seeded accounts (password for all: " + SEED_PASSWORD + "):");
   console.table(
-    USER_ROLES.map((role) => ({ role, email: `${role}@creditsea-lms.test` }))
+    USER_ROLES.map((role) => ({ role, email: `${role}@creditsea.test` }))
   );
 
   await mongoose.disconnect();
