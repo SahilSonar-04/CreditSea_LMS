@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Build output
+dist/
+build/
+.next/
+*/dist/
+*/.next/
+
+# Env files
+.env
+.env.local
+*/.env
+*/.env.local
+
+# Logs
+npm-debug.log*
+*.log
+
+# OS
+.DS_Store
+
+# Uploads (local dev only)
+server/uploads/*
+!server/uploads/.gitkeep
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
