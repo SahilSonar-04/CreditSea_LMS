@@ -12,13 +12,41 @@ import BrandMark from "@/components/BrandMark";
 
 const EMPLOYMENT_MODES: EmploymentMode[] = ["Salaried", "Self-Employed", "Unemployed"];
 
+function formatDobInput(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 8); // DDMMYYYY
+  const day = digits.slice(0, 2);
+  const month = digits.slice(2, 4);
+  const year = digits.slice(4, 8);
+
+  if (digits.length <= 2) return day;
+  if (digits.length <= 4) return `${day}/${month}`;
+  return `${day}/${month}/${year}`;
+}
+function parseDobToIso(value: string): string | null {
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value);
+  if (!match) return null;
+
+  const [, dd, mm, yyyy] = match;
+  const day = Number(dd);
+  const month = Number(mm);
+  const year = Number(yyyy);
+
+  const date = new Date(year, month - 1, day);
+  const isValid =
+    date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
+
+  if (!isValid) return null;
+
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 export default function PersonalDetailsPage() {
   const router = useRouter();
   const applicationId = useApplicationId();
 
   const [fullName, setFullName] = useState("");
   const [pan, setPan] = useState("");
-  const [dob, setDob] = useState("");
+  const [dobInput, setDobInput] = useState("");
   const [monthlySalary, setMonthlySalary] = useState("");
   const [employmentMode, setEmploymentMode] = useState<EmploymentMode | "">("");
 
@@ -40,16 +68,20 @@ export default function PersonalDetailsPage() {
     }
   }, [applicationId, router]);
 
+  const dobIso = useMemo(() => parseDobToIso(dobInput), [dobInput]);
+  const dobComplete = dobInput.length === 10;
+  const dobInvalid = dobComplete && !dobIso;
+
   const livePreview = useMemo(() => {
-    if (!pan || !dob || !monthlySalary || !employmentMode) return null;
+    if (!pan || !dobIso || !monthlySalary || !employmentMode) return null;
 
     return checkBreClientSide({
       pan: pan.toUpperCase(),
-      dob,
+      dob: dobIso,
       monthlySalary: Number(monthlySalary),
       employmentMode,
     });
-  }, [pan, dob, monthlySalary, employmentMode]);
+  }, [pan, dobIso, monthlySalary, employmentMode]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -57,6 +89,11 @@ export default function PersonalDetailsPage() {
     setServerReasons([]);
 
     if (!applicationId) return;
+
+    if (!dobIso) {
+      setError("Please enter a valid date of birth in DD/MM/YYYY format");
+      return;
+    }
 
     const token = getToken();
     setLoading(true);
@@ -70,7 +107,7 @@ export default function PersonalDetailsPage() {
           body: JSON.stringify({
             fullName,
             pan: pan.toUpperCase(),
-            dob,
+            dob: dobIso,
             monthlySalary: Number(monthlySalary),
             employmentMode,
           }),
@@ -128,12 +165,18 @@ export default function PersonalDetailsPage() {
           <label htmlFor="dob" className="field-label">Date of birth</label>
           <input
             id="dob"
-            type="date"
+            type="text"
+            inputMode="numeric"
             required
-            value={dob}
-            onChange={(e) => setDob(e.target.value)}
+            placeholder="DD/MM/YYYY"
+            maxLength={10}
+            value={dobInput}
+            onChange={(e) => setDobInput(formatDobInput(e.target.value))}
             className="field-control"
           />
+          {dobInvalid && (
+            <p className="mt-1 text-xs text-rose-600">Enter a valid date as DD/MM/YYYY</p>
+          )}
         </div>
 
         <div>
