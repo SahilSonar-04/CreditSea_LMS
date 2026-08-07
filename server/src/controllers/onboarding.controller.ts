@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import { User } from "../models/User";
 import { signToken } from "../utils/jwt.util";
+import { validatePassword } from "../utils/password.util";
 
 const SALT_ROUNDS = 10;
 
@@ -11,6 +12,15 @@ export async function signUp(req: Request, res: Response): Promise<void> {
 
     if (!name || !email || !password) {
       res.status(400).json({ message: "name, email and password are required" });
+      return;
+    }
+
+    const passwordCheck = validatePassword(password);
+    if (!passwordCheck.valid) {
+      res.status(400).json({
+        message: "Password does not meet the minimum requirements",
+        passwordReasons: passwordCheck.reasons,
+      });
       return;
     }
 
