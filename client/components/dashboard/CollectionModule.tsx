@@ -132,6 +132,8 @@ export default function CollectionModule() {
                 <input
                   type="number"
                   min={0}
+                  step="0.01"
+                  inputMode="decimal"
                   value={form.amount}
                   onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
                   placeholder="Amount"
