@@ -8,11 +8,17 @@ function getRouteParam(param: string | string[] | undefined): string | null {
   return typeof param === "string" ? param : null;
 }
 
+
 export async function getSalesLeads(_req: Request, res: Response): Promise<void> {
   try {
-    const appliedBorrowerIds = await Application.distinct("borrowerId", {
-      status: { $ne: "DRAFT" },
-    });
+    const latestStatusByBorrower = await Application.aggregate([
+      { $sort: { borrowerId: 1, createdAt: -1 } },
+      { $group: { _id: "$borrowerId", latestStatus: { $first: "$status" } } },
+    ]);
+
+    const appliedBorrowerIds = latestStatusByBorrower
+      .filter((entry) => entry.latestStatus !== "DRAFT")
+      .map((entry) => entry._id);
 
     const leads = await User.find({
       role: "borrower",

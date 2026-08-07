@@ -41,7 +41,11 @@ export async function createOrGetDraft(req: Request, res: Response): Promise<voi
 
     const borrowerId = req.user.userId;
 
-    const existingApplication = await Application.findOne({ borrowerId }).sort({ createdAt: -1 });
+    const existingApplication = await Application.findOne({
+      borrowerId,
+      status: { $nin: ["CLOSED", "REJECTED"] },
+    }).sort({ createdAt: -1 });
+    
     if (existingApplication) {
       res.status(200).json({ application: existingApplication });
       return;
