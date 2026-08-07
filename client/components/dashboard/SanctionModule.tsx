@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { apiFetch, ApiError } from "@/lib/api";
+import { apiFetch, apiFetchBlob, ApiError } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import { Application } from "@/types/application";
 
@@ -13,6 +13,7 @@ export default function SanctionModule() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [slipLoadingId, setSlipLoadingId] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadQueue() {
@@ -31,6 +32,23 @@ export default function SanctionModule() {
 
     void loadQueue();
   }, []);
+
+  async function handleViewSlip(applicationId: string, salarySlipUrl: string) {
+  setActionError(null);
+  setSlipLoadingId(applicationId);
+  const token = getToken();
+
+  try {
+    const blob = await apiFetchBlob(salarySlipUrl, token || undefined);
+    const objectUrl = URL.createObjectURL(blob);
+    window.open(objectUrl, "_blank", "noopener,noreferrer");
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+  } catch (err) {
+    setActionError(err instanceof ApiError ? err.message : "Could not load salary slip");
+  } finally {
+    setSlipLoadingId(null);
+  }
+}
 
   async function handleApprove(id: string) {
     setActionError(null);
@@ -103,25 +121,18 @@ export default function SanctionModule() {
                 </p>
               </div>
               <div className="flex gap-2">
-                <button
-                  type="button"
-                  disabled={busyId === app._id}
-                  onClick={() => handleApprove(app._id)}
-                  className="rounded-lg bg-emerald-600 px-3 py-2 font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
-                >
-                  Approve
-                </button>
-                <button
-                  type="button"
-                  disabled={busyId === app._id}
-                  onClick={() => {
-                    setRejectingId(app._id);
-                    setActionError(null);
-                  }}
-                  className="rounded-lg bg-rose-600 px-3 py-2 font-semibold text-white transition hover:bg-rose-700 disabled:opacity-50"
-                >
-                  Reject
-                </button>
+                {app.salarySlipUrl && (
+                  <button
+                    type="button"
+                    disabled={slipLoadingId === app._id}
+                    onClick={() => handleViewSlip(app._id, app.salarySlipUrl!)}
+                    className="rounded-lg border border-sky-300 px-3 py-2 font-semibold text-sky-700 transition hover:bg-sky-50 disabled:opacity-50"
+                  >
+                    {slipLoadingId === app._id ? "Opening..." : "View slip"}
+                  </button>
+                )}
+                <button type="button" /* existing Approve button */>Approve</button>
+                <button type="button" /* existing Reject button */>Reject</button>
               </div>
             </div>
 

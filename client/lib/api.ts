@@ -58,3 +58,16 @@ export async function apiFetchForm<T>(
 
   return data as T;
 }
+
+export async function apiFetchBlob(path: string, token?: string): Promise<Blob> {
+  const res = await fetch(`${API_URL}${path}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new ApiError(data.message || `Request failed with status ${res.status}`, res.status, data);
+  }
+
+  return res.blob();
+}
