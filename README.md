@@ -1,203 +1,185 @@
-# CreditSea LMS
+# CreditSea — Loan Management System
 
-A full-stack Loan Management System built for the CreditSea SDE Intern assignment. It provides a borrower application portal and an internal, role-gated dashboard for Sales, Sanction, Disbursement, and Collection teams.
+A small lending platform. Borrowers can sign up and apply for a short-term loan through a guided flow, and internal teams (Sales, Sanction, Disbursement, Collection) move that loan through its lifecycle from a role-gated dashboard.
 
-The project uses a CreditSea-inspired visual treatment and microcopy while retaining the assignment's prescribed BRE, loan-math, and lifecycle rules.
+Stack is MERN-ish: Next.js (App Router) + TypeScript on the frontend, Express + TypeScript + Mongoose on the backend, JWT for auth.
 
-## Highlights
+---
 
-- Borrower journey: sign up/sign in → personal details and BRE → salary-slip upload → loan configuration → application submission
-- Server-enforced BRE with instant client-side feedback
-- Server-computed simple interest and total repayment
-- Salary-slip upload for PDF, JPG, and PNG files up to 5MB
-- Role-based access control on both the Next.js UI and Express API
-- Operations lifecycle: `APPLIED` → `SANCTIONED` → `DISBURSED` → `CLOSED`
-- Collection safeguards: globally unique UTR, overpayment prevention, and automatic closure after full repayment
-- Seeded accounts for all six roles
+## What's in here
 
-## Tech Stack
-
-| Layer | Technology |
-| --- | --- |
-| Frontend | Next.js App Router, TypeScript, Tailwind CSS |
-| Backend | Node.js, Express, TypeScript |
-| Database | MongoDB, Mongoose |
-| Auth | JWT, bcrypt |
-| Uploads | Multer |
-
-## Project Structure
-
-```text
-/client                 Next.js borrower portal and operations dashboard
-/server/src/controllers Request handlers for onboarding, applications, dashboard
-/server/src/models      Mongoose User, Application, and Payment schemas
-/server/src/middleware  Auth, role, and upload middleware
-/server/src/utils       BRE, loan math, JWT, reference number, and seed helpers
+```
+/client                 Next.js app — borrower portal + ops dashboard
+/server/src/controllers onboarding, applications, dashboard route handlers
+/server/src/models      User, Application, Payment (Mongoose schemas)
+/server/src/middleware  auth, role, and upload (multer) middleware
+/server/src/utils       BRE, loan math, JWT, ref-number, and seed helpers
 ```
 
-## Prerequisites
+The frontend and backend are two independent apps with their own `package.json`, run separately.
 
-- Node.js 20+
-- npm
-- MongoDB connection string (MongoDB Atlas free tier is sufficient)
+---
 
-## Local Setup
+## Running it locally
 
-1. Configure and start the backend.
+You'll need Node 20+, npm, and a MongoDB connection string.
 
-   ```bash
-   cd server
-   npm install
-   cp .env.example .env
-   ```
+**1. Backend**
 
-   Set these values in `server/.env`:
+```bash
+cd server
+npm install
+cp .env.example .env
+```
 
-   ```env
-   PORT=5000
-   NODE_ENV=development
-   MONGO_URI=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/creditsea-lms
-   JWT_SECRET=replace-with-a-long-random-string
-   JWT_EXPIRES_IN=7d
-   ```
+Fill in `server/.env`:
 
-   ```bash
-   npm run dev
-   ```
+```env
+PORT=5000 #For Local Dev
+CLIENT_ORIGIN=frontend-url #For Production
+NODE_ENV=development
+MONGO_URI=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/creditsea-lms
+JWT_SECRET=replace-with-a-long-random-string
+JWT_EXPIRES_IN=7d
+```
 
-2. Configure and start the frontend in a separate terminal.
+```bash
+npm run dev
+```
 
-   ```bash
-   cd client
-   npm install
-   cp .env.local.example .env.local
-   npm run dev
-   ```
+**2. Frontend**
 
-   `client/.env.local` should contain:
+```bash
+cd client
+npm install
+```
 
-   ```env
-   NEXT_PUBLIC_API_URL=http://localhost:5000/api
-   ```
+Create `client/.env.local`:
 
-3. Seed the evaluator accounts.
+```env
+NEXT_PUBLIC_API_URL=http://localhost:5000/api #Backend Url
+```
 
-   ```bash
-   cd server
-   npm run seed
-   ```
+```bash
+npm run dev
+```
 
-Open [http://localhost:3000](http://localhost:3000).
+**3. Seed accounts**
 
-## Seed Credentials
+```bash
+cd server
+npm run seed
+```
 
-All seeded accounts use password: `Password@123`
+This creates one account per role so you can log in immediately without signing up manually. Open [http://localhost:3000](http://localhost:3000).
 
-| Role | Email | Portal access |
-| --- | --- | --- |
-| Admin | `admin@creditsea.test` | All four operations modules |
-| Sales | `sales@creditsea.test` | Sales only |
-| Sanction | `sanction@creditsea.test` | Sanction only |
-| Disbursement | `disbursement@creditsea.test` | Disbursement only |
-| Collection | `collection@creditsea.test` | Collection only |
-| Borrower | `borrower@creditsea.test` | Application portal only |
+### Seed logins
 
-Public sign-up always creates a `borrower`; executive roles are supplied by the seed workflow.
+Password for every seeded account is `Password@123`.
 
-## Application Rules
-
-### Business Rule Engine
-
-Every rule must pass before the borrower can upload a salary slip or submit a loan:
-
-| Rule | Accepted value |
+| Role | Email |
 | --- | --- |
-| Age | 23–50 years, inclusive |
-| Monthly salary | ₹25,000 or higher |
-| PAN | `^[A-Z]{5}[0-9]{4}[A-Z]{1}$` |
-| Employment | `Salaried` or `Self-Employed` only |
+| Admin | `admin@creditsea.test` |
+| Sales | `sales@creditsea.test` |
+| Sanction | `sanction@creditsea.test` |
+| Disbursement | `disbursement@creditsea.test` |
+| Collection | `collection@creditsea.test` |
+| Borrower | `borrower@creditsea.test` |
 
-`Unemployed` is an allowed form option so the API can return a clear BRE failure, but it is never eligible.
+Public sign-up always creates a `borrower` account — the other five roles only exist because the seed script created them.
 
-### Loan Math
+---
 
-- Loan amount: ₹50,000–₹5,00,000
-- Tenure: 30–365 days
-- Interest rate: fixed at 12% p.a.
-- Simple interest: `SI = (P × R × T) / (365 × 100)`
-- Total repayment: `P + SI`
+## Borrower flow
 
-The browser updates the estimate live. The server recalculates and stores both monetary values when the borrower applies, so client-submitted totals are never trusted.
+Sign up / sign in → personal details (BRE runs here) → upload salary slip → configure loan and apply. The application is a single `DRAFT` document that gets updated at each step, so a borrower can leave and come back without losing progress.
 
-### Lifecycle
+**Eligibility (BRE)** — checked on the server before anything else can happen:
 
-```text
+| Rule | Passes if |
+| --- | --- |
+| Age | Between 23 and 50 (inclusive) |
+| Monthly salary | ₹25,000 or more |
+| PAN | Matches `^[A-Z]{5}[0-9]{4}[A-Z]{1}$` |
+| Employment | `Salaried` or `Self-Employed` (not `Unemployed`) |
+
+The client runs the same checks too, so the borrower gets instant feedback while typing instead of waiting for a round trip. The server re-runs the BRE independently and is what actually decides whether the application can proceed, because a client check is trivial to bypass with a raw API call.
+
+**Loan math** — fixed 12% p.a., simple interest:
+
+```
+SI = (P × R × T) / (365 × 100)     T = tenure in days
+Total repayment = P + SI
+```
+
+Amount is ₹50,000–₹5,00,000, tenure is 30–365 days, both picked with sliders that update the repayment estimate live. Same story as the BRE: the browser shows a live number for UX, but the server recalculates and stores the real figures when "Apply" is hit, so nothing client-submitted is trusted for money.
+
+---
+
+## Lifecycle
+
+```
 DRAFT → APPLIED → SANCTIONED → DISBURSED → CLOSED
-              └→ REJECTED
+              ↘ REJECTED
 ```
 
-- Sanction approves or rejects an `APPLIED` loan. Rejection requires a reason.
-- Disbursement marks a `SANCTIONED` loan as `DISBURSED` and records the timestamp.
-- Collection records payments only for `DISBURSED` loans. A UTR is globally unique and a payment cannot exceed the outstanding balance.
-- A loan closes automatically, never manually, when its outstanding balance reaches zero.
+- **Sales** — read-only. Shows registered borrowers who haven't submitted an application yet (i.e. still stuck in `DRAFT` or never started one). Treat it as a lead list.
+- **Sanction** — reviews `APPLIED` loans, approves (→ `SANCTIONED`) or rejects (→ `REJECTED`, reason required).
+- **Disbursement** — marks a `SANCTIONED` loan `DISBURSED` and stamps the timestamp.
+- **Collection** — records payments against `DISBURSED` loans. Each payment needs a UTR (globally unique — enforced with a unique index), amount, and date. Outstanding balance is decremented on each payment; once it hits zero the loan auto-closes to `CLOSED`. There's no manual "close" action anywhere — closing only ever happens as a side effect of the balance reaching zero.
 
-## API Overview
+Every status change gets appended to a `statusHistory` array on the application, so there's an audit trail of who did what and when, even though the UI doesn't currently surface all of it.
 
-| Method | Endpoint | Access | Purpose |
+---
+
+## Access control
+
+Six roles: `admin`, `sales`, `sanction`, `disbursement`, `collection`, `borrower`. Stored as a plain string enum on the `User` document.
+
+Every protected route runs two middlewares in order:
+
+1. `authMiddleware` — verifies the JWT, attaches the payload to `req.user`. No/garbage/expired token → `401`.
+2. `roleMiddleware(...allowed)` — checks `req.user.role` against an allow-list for that route. Wrong role but valid token → `403`.
+
+The frontend also redirects people away from modules they can't use, but that's just UX — it's not where the actual enforcement lives. If you hit a dashboard API directly with a borrower's token, you get a `403`, same as clicking around would never let you see.
+
+Admin bypasses the role check on every dashboard route and can see all four modules.
+
+---
+
+## API surface
+
+| Method | Route | Who | What |
 | --- | --- | --- | --- |
-| POST | `/api/onboarding/sign-up` | Public | Create borrower account |
-| POST | `/api/onboarding/sign-in` | Public | Sign in and receive JWT |
-| POST | `/api/applications` | Borrower | Create or resume draft |
-| PATCH | `/api/applications/:id/personal-details` | Borrower | Save details and run BRE |
-| POST | `/api/applications/:id/upload-slip` | Borrower | Upload salary slip |
-| PATCH | `/api/applications/:id/apply` | Borrower | Compute loan values and submit |
-| GET | `/api/applications/me` | Borrower | Get own applications |
-| GET | `/api/dashboard/sales` | Sales, Admin | Registered, not-yet-applied leads |
-| GET/PATCH | `/api/dashboard/sanction` | Sanction, Admin | Queue, approve, or reject loans |
-| GET/PATCH | `/api/dashboard/disbursement` | Disbursement, Admin | Queue and mark loans disbursed |
-| GET/POST | `/api/dashboard/collection` | Collection, Admin | Queue and record payments |
+| POST | `/api/onboarding/sign-up` | anyone | create a borrower account |
+| POST | `/api/onboarding/sign-in` | anyone | log in, get a JWT |
+| GET | `/api/users/me` | any authed user | current profile |
+| POST | `/api/applications` | borrower | create or resume the open draft |
+| GET | `/api/applications/me` | borrower | list own applications |
+| PATCH | `/api/applications/:id/personal-details` | borrower | save details, run BRE |
+| POST | `/api/applications/:id/upload-slip` | borrower | upload salary slip (multipart) |
+| PATCH | `/api/applications/:id/apply` | borrower | set loan amount/tenure, submit |
+| GET | `/api/uploads/:id` | owner or sanction/admin | fetch the raw salary slip |
+| GET | `/api/dashboard/sales` | sales, admin | leads that haven't applied |
+| GET | `/api/dashboard/sanction` | sanction, admin | applications awaiting a decision |
+| PATCH | `/api/dashboard/sanction/:id/approve` | sanction, admin | approve |
+| PATCH | `/api/dashboard/sanction/:id/reject` | sanction, admin | reject (needs `reason`) |
+| GET | `/api/dashboard/sanction/history` | sanction, admin | past decisions |
+| GET | `/api/dashboard/disbursement` | disbursement, admin | sanctioned, awaiting funds |
+| PATCH | `/api/dashboard/disbursement/:id/disburse` | disbursement, admin | mark disbursed |
+| GET | `/api/dashboard/disbursement/history` | disbursement, admin | past disbursements |
+| GET | `/api/dashboard/collection` | collection, admin | active loans with a balance |
+| POST | `/api/dashboard/collection/:loanId/payment` | collection, admin | record a payment |
+| GET | `/api/dashboard/collection/history` | collection, admin | all payments |
 
-Sanction action endpoints are `/api/dashboard/sanction/:id/approve` and `/reject`; disbursement is `/api/dashboard/disbursement/:id/disburse`; payments use `/api/dashboard/collection/:loanId/payment`.
+---
 
-## Design Decisions
-
-### Role storage and checks
-
-Roles are stored directly as a fixed `role` enum on the `User` document:
-
-```text
-admin | sales | sanction | disbursement | collection | borrower
-```
-
-Six fixed roles do not warrant a separate roles/permissions collection. Every protected route composes two middleware layers in order:
-
-1. `authMiddleware` verifies the JWT and attaches its user payload to `req.user`.
-2. `roleMiddleware(...allowedRoles)` checks that role against the endpoint allow-list.
-
-This is enforced independently of navigation: the UI redirects users away from unavailable modules, and the API returns `403` for a valid token with the wrong role. A missing, malformed, invalid, or expired token returns `401`.
-
-### BRE placement
-
-The client mirrors the BRE for immediate feedback while the borrower fills the form. The server runs the same checks before persisting the decision and remains the source of truth, because client-side JavaScript can be bypassed with a direct API request.
-
-### Data model
-
-- `User` stores account, authentication, role, and contact data.
-- `Application` stores borrower details, BRE result/reasons, uploaded salary slip URL, loan math, lifecycle fields, and status history.
-- `Payment` stores each collection payment with a unique UTR and its recording executive.
-
-`loanRefNumber` is a human-readable application reference. `statusHistory` preserves an auditable record of each material lifecycle change.
-
-## Verification
+## Verification / sanity checks
 
 ```bash
 cd server && npm run build
-cd ../client && npm run lint
-cd ../client && npm run build -- --webpack
+cd client && npm run lint
+cd client && npm run build -- --webpack
 ```
+---
 
-Phase 4 verification exercised the full API flow: BRE failure and correction, application submission, RBAC bypass rejection, sanction, disbursement, partial payment, duplicate UTR rejection, overpayment rejection, and automatic closure.
-
-## Assignment Note
-
-The assignment's eligibility values (age 23–50 and ₹25,000/month) are illustrative requirements for this implementation. They are intentionally kept separate from any live CreditSea production eligibility criteria.
